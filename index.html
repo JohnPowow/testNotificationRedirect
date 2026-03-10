@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notification Redirect Test</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      display: flex; justify-content: center; align-items: center;
+      min-height: 100vh; background: #1a1a2e; color: #e0e0e0;
+    }
+    .card {
+      background: #16213e; border-radius: 12px; padding: 40px;
+      max-width: 520px; width: 90%; box-shadow: 0 8px 32px rgba(0,0,0,.4);
+      text-align: center;
+    }
+    h1 { font-size: 1.4rem; margin-bottom: 8px; color: #e94560; }
+    p.desc { font-size: .9rem; color: #a0a0b0; margin-bottom: 28px; line-height: 1.5; }
+    .step { margin-bottom: 24px; }
+    .step-label {
+      font-size: .75rem; text-transform: uppercase; letter-spacing: 1px;
+      color: #607080; margin-bottom: 8px;
+    }
+    button {
+      padding: 14px 32px; font-size: 1rem; border: none; border-radius: 8px;
+      cursor: pointer; font-weight: 600; transition: all .2s;
+    }
+    button:disabled {
+      opacity: .35; cursor: not-allowed;
+    }
+    #btnPermission {
+      background: #0f3460; color: #e0e0e0;
+    }
+    #btnPermission:hover:not(:disabled) { background: #154a8a; }
+    #btnNotify {
+      background: #e94560; color: #fff;
+    }
+    #btnNotify:hover:not(:disabled) { background: #ff6b81; }
+    #status {
+      margin-top: 20px; font-size: .85rem; padding: 10px;
+      border-radius: 6px; background: #0f3460; display: none;
+    }
+    #status.show { display: block; }
+    .granted { color: #2ecc71; }
+    .denied  { color: #e74c3c; }
+    .default { color: #f39c12; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>SmartScreen Notification Redirect Test</h1>
+    <p class="desc">
+      This page tests browser notification&ndash;initiated navigation through a
+      redirect to the Microsoft SmartScreen phishing demo block page.
+    </p>
+
+    <!-- Step 1: Request permission -->
+    <div class="step">
+      <div class="step-label">Step 1 &mdash; Enable Notifications</div>
+      <button id="btnPermission">Grant Notification Permission</button>
+    </div>
+
+    <!-- Step 2: Send notification -->
+    <div class="step">
+      <div class="step-label">Step 2 &mdash; Send Test Notification</div>
+      <button id="btnNotify" disabled>Send Notification</button>
+    </div>
+
+    <div id="status"></div>
+  </div>
+
+  <script>
+    const btnPerm   = document.getElementById('btnPermission');
+    const btnNotify = document.getElementById('btnNotify');
+    const status    = document.getElementById('status');
+
+    function showStatus(msg, cls) {
+      status.textContent = msg;
+      status.className = 'show ' + (cls || '');
+    }
+
+    // Reflect current permission state on load
+    function syncPermissionState() {
+      if (!('Notification' in window)) {
+        showStatus('This browser does not support notifications.', 'denied');
+        btnPerm.disabled = true;
+        return;
+      }
+      const perm = Notification.permission;
+      if (perm === 'granted') {
+        btnPerm.disabled  = true;
+        btnNotify.disabled = false;
+        showStatus('Notifications are enabled. Ready to send.', 'granted');
+      } else if (perm === 'denied') {
+        btnPerm.disabled  = true;
+        btnNotify.disabled = true;
+        showStatus('Notifications were denied. Reset permissions in browser settings and reload.', 'denied');
+      }
+    }
+    syncPermissionState();
+
+    // Step 1: Ask for permission
+    btnPerm.addEventListener('click', async () => {
+      const result = await Notification.requestPermission();
+      if (result === 'granted') {
+        btnPerm.disabled  = true;
+        btnNotify.disabled = false;
+        showStatus('Permission granted! Now click "Send Notification".', 'granted');
+      } else if (result === 'denied') {
+        btnPerm.disabled = true;
+        showStatus('Permission denied. Reset in browser settings to try again.', 'denied');
+      } else {
+        showStatus('Permission dismissed. Click the button to try again.', 'default');
+      }
+    });
+
+    // Step 2: Fire a notification whose click navigates to redirect.html
+    btnNotify.addEventListener('click', () => {
+      const redirectUrl = new URL('redirect.html', window.location.href).href;
+
+      const notification = new Notification('SmartScreen Test', {
+        body: 'Click this notification to test the SmartScreen redirect chain.',
+        icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🔔</text></svg>',
+        requireInteraction: true,
+        data: { url: redirectUrl }
+      });
+
+      notification.onclick = function (event) {
+        event.preventDefault();
+        window.open(redirectUrl, '_blank');
+        notification.close();
+      };
+
+      showStatus('Notification sent! Click it in your system tray to trigger the redirect.', 'granted');
+    });
+  </script>
+</body>
+</html>
