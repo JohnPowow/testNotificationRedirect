@@ -75,10 +75,35 @@
     const btnPerm   = document.getElementById('btnPermission');
     const btnNotify = document.getElementById('btnNotify');
     const status    = document.getElementById('status');
+    let swRegistration = null;
 
     function showStatus(msg, cls) {
       status.textContent = msg;
       status.className = 'show ' + (cls || '');
+    }
+
+    // Register the service worker — required for clients.openWindow() path
+    // which triggers NotifyWindowOpened → NOTIFICATION_INITIATED
+    async function registerServiceWorker() {
+      if (!('serviceWorker' in navigator)) {
+        showStatus('Service workers not supported in this browser.', 'denied');
+        return;
+      }
+      try {
+        swRegistration = await navigator.serviceWorker.register('sw.js');
+        // Wait for the SW to be active
+        if (swRegistration.installing) {
+          await new Promise((resolve) => {
+            swRegistration.installing.addEventListener('statechange', (e) => {
+              if (e.target.state === 'activated') resolve();
+            });
+          });
+        }
+        console.log('Service worker registered:', swRegistration.scope);
+      } catch (err) {
+        showStatus('Service worker registration failed: ' + err.message, 'denied');
+        console.error('SW registration failed:', err);
+      }
     }
 
     // Reflect current permission state on load
@@ -99,7 +124,9 @@
         showStatus('Notifications were denied. Reset permissions in browser settings and reload.', 'denied');
       }
     }
-    syncPermissionState();
+
+    // Init: register SW then sync permission UI
+    registerServiceWorker().then(syncPermissionState);
 
     // Step 1: Ask for permission
     btnPerm.addEventListener('click', async () => {
@@ -116,24 +143,26 @@
       }
     });
 
-    // Step 2: Fire a notification whose click navigates to redirect.html
-    btnNotify.addEventListener('click', () => {
+    // Step 2: Fire notification via the service worker registration.
+    // The SW's notificationclick handler calls clients.openWindow(url) which
+    // is the code path that populates notification_navigation_events_ via
+    // ServiceWorkerVersion::NotifyWindowOpened → NOTIFICATION_INITIATED.
+    btnNotify.addEventListener('click', async () => {
+      if (!swRegistration) {
+        showStatus('Service worker not ready. Please reload the page.', 'denied');
+        return;
+      }
+
       const redirectUrl = new URL('redirect.html', window.location.href).href;
 
-      const notification = new Notification('SmartScreen Test', {
+      await swRegistration.showNotification('SmartScreen Test', {
         body: 'Click this notification to test the SmartScreen redirect chain.',
         icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🔔</text></svg>',
         requireInteraction: true,
         data: { url: redirectUrl }
       });
 
-      notification.onclick = function (event) {
-        event.preventDefault();
-        window.open(redirectUrl, '_blank');
-        notification.close();
-      };
-
-      showStatus('Notification sent! Click it in your system tray to trigger the redirect.', 'granted');
+      showStatus('Notification sent! Click it in your system tray — the service worker will call clients.openWindow() to trigger NOTIFICATION_INITIATED.', 'granted');
     });
   </script>
 </body>
