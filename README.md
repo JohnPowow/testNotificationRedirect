@@ -11,16 +11,13 @@ Test site for verifying `NOTIFICATION_INITIATED` navigation classification in Ed
 ## Requirements
 
 - A browser that supports service workers and the Notifications API
-- The following features must be enabled:
-  ```
-  --enable-features=CollectNotificationReferrers,MaliciousSiteRemediationEnabled
-  ```
+- The required browser feature flags must be enabled (see internal documentation for details)
 - The navigation must occur within **5 seconds** of the notification click event
 
 ## Usage
 
 1. Host the site (e.g., via GitHub Pages or a local HTTPS server)
-2. Launch Edge with `--enable-features=CollectNotificationReferrers,MaliciousSiteRemediationEnabled`
+2. Launch Edge with the required feature flags enabled (see internal documentation)
 3. Open the test page
 4. Click **Grant Notification Permission** and allow
 5. Click **Send Notification**
