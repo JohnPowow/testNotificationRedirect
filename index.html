@@ -46,41 +46,185 @@
     .granted { color: #2ecc71; }
     .denied  { color: #e74c3c; }
     .default { color: #f39c12; }
+
+    /* ---------- Mode toggle (visible in both modes) ---------- */
+    .mode-toggle {
+      display: flex; align-items: center; justify-content: center;
+      gap: 10px; margin-bottom: 22px; font-size: .75rem;
+      color: #607080; text-transform: uppercase; letter-spacing: 1px;
+    }
+    .switch { position: relative; display: inline-block; width: 44px; height: 22px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; cursor: pointer; inset: 0;
+      background: #0f3460; transition: background .2s;
+      border-radius: 22px;
+    }
+    .slider::before {
+      content: ""; position: absolute; height: 16px; width: 16px;
+      left: 3px; top: 3px; background: #e0e0e0;
+      transition: transform .2s; border-radius: 50%;
+    }
+    .switch input:checked + .slider { background: #e94560; }
+    .switch input:checked + .slider::before { transform: translateX(22px); }
+    .mode-name { min-width: 56px; text-align: left; font-weight: 700; color: #a0a0b0; }
+
+    /* ===================================================== */
+    /* ============== Demo (scareware) skin ================ */
+    /* ===================================================== */
+    @keyframes scarewarePulse {
+      0%, 100% { background: #2a0000; }
+      50%      { background: #4a0a0a; }
+    }
+    @keyframes scarewareFlash {
+      0%, 100% { color: #ff2d2d; text-shadow: 0 0 12px #ff4040; }
+      50%      { color: #ffea00; text-shadow: 0 0 20px #ffea00; }
+    }
+    @keyframes scarewareShake {
+      0%, 100% { transform: translateX(0); }
+      25%      { transform: translateX(-2px); }
+      75%      { transform: translateX(2px); }
+    }
+    body.demo-mode {
+      background: #2a0000;
+      animation: scarewarePulse 1.4s ease-in-out infinite;
+      color: #ffe9e0;
+    }
+    body.demo-mode .card {
+      background: #1a0000;
+      border: 3px solid #e74c3c;
+      box-shadow: 0 0 32px rgba(231,76,60,.6), 0 8px 32px rgba(0,0,0,.6);
+    }
+    body.demo-mode h1 {
+      font-size: 1.7rem; font-weight: 800;
+      text-transform: uppercase; letter-spacing: 1px;
+      animation: scarewareFlash 1s ease-in-out infinite,
+                 scarewareShake 0.4s ease-in-out infinite;
+    }
+    body.demo-mode p.desc {
+      color: #ffd0c0; font-weight: 700; font-size: .95rem;
+      text-transform: uppercase; letter-spacing: .5px; line-height: 1.45;
+    }
+    body.demo-mode .step-label {
+      color: #ffea00; font-weight: 800;
+    }
+    body.demo-mode #btnPermission,
+    body.demo-mode #btnNotify {
+      background: linear-gradient(180deg, #ff2d2d 0%, #a30000 100%);
+      color: #fff; text-transform: uppercase; letter-spacing: 1px;
+      font-weight: 800; box-shadow: 0 0 16px rgba(255,45,45,.7);
+    }
+    body.demo-mode #btnPermission:hover:not(:disabled),
+    body.demo-mode #btnNotify:hover:not(:disabled) {
+      background: linear-gradient(180deg, #ff5050 0%, #c01010 100%);
+      box-shadow: 0 0 24px rgba(255,80,80,.9);
+    }
+    body.demo-mode #status {
+      background: #4a0a0a; border: 1px solid #e74c3c;
+      color: #ffea00; font-weight: 700;
+    }
+    body.demo-mode .mode-toggle { color: #ffea00; }
+    body.demo-mode .mode-name   { color: #ffea00; }
+    body.demo-mode .slider      { background: #4a0a0a; }
+    body.demo-mode .granted     { color: #ffea00; }
   </style>
 </head>
 <body>
   <div class="card">
-    <h1>SmartScreen Notification Redirect Test</h1>
-    <p class="desc">
+    <!-- Mode toggle: Original (default) vs Demo (scareware look) -->
+    <div class="mode-toggle">
+      <span>Mode:</span>
+      <label class="switch" aria-label="Toggle demo mode">
+        <input type="checkbox" id="modeToggle">
+        <span class="slider"></span>
+      </label>
+      <span class="mode-name" id="modeName">Original</span>
+    </div>
+
+    <h1 data-text-original="SmartScreen Notification Redirect Test"
+        data-text-demo="&#9888;&#65039; CRITICAL SECURITY ALERT">SmartScreen Notification Redirect Test</h1>
+    <p class="desc"
+       data-text-original="This page tests browser notification–initiated navigation through a redirect to the Microsoft SmartScreen phishing demo block page."
+       data-text-demo="YOUR COMPUTER IS AT RISK! Multiple threats detected. Enable protection NOW to prevent identity theft and data loss.">
       This page tests browser notification&ndash;initiated navigation through a
       redirect to the Microsoft SmartScreen phishing demo block page.
     </p>
 
     <!-- Step 1: Request permission -->
     <div class="step">
-      <div class="step-label">Step 1 &mdash; Enable Notifications</div>
-      <button id="btnPermission">Grant Notification Permission</button>
+      <div class="step-label"
+           data-text-original="Step 1 — Enable Notifications"
+           data-text-demo="Step 1 — Enable Protection">Step 1 &mdash; Enable Notifications</div>
+      <button id="btnPermission"
+              data-text-original="Grant Notification Permission"
+              data-text-demo="🛡️ ENABLE PROTECTION NOW">Grant Notification Permission</button>
     </div>
 
     <!-- Step 2: Send notification -->
     <div class="step">
-      <div class="step-label">Step 2 &mdash; Send Test Notification</div>
-      <button id="btnNotify" disabled>Send Notification</button>
+      <div class="step-label"
+           data-text-original="Step 2 — Send Test Notification"
+           data-text-demo="Step 2 — Scan & Remove Threats">Step 2 &mdash; Send Test Notification</div>
+      <button id="btnNotify" disabled
+              data-text-original="Send Notification"
+              data-text-demo="🚨 SCAN FOR VIRUSES NOW">Send Notification</button>
     </div>
 
     <div id="status"></div>
   </div>
 
   <script>
-    const btnPerm   = document.getElementById('btnPermission');
-    const btnNotify = document.getElementById('btnNotify');
-    const status    = document.getElementById('status');
+    const btnPerm    = document.getElementById('btnPermission');
+    const btnNotify  = document.getElementById('btnNotify');
+    const status     = document.getElementById('status');
+    const modeToggle = document.getElementById('modeToggle');
+    const modeName   = document.getElementById('modeName');
     let swRegistration = null;
+
+    // Demo-mode notification variations. Each gets a unique tag so the system
+    // stacks them instead of replacing the previous one.
+    const SCAREWARE_NOTIFICATIONS = [
+      { title: '⚠️ CRITICAL SECURITY ALERT',
+        body:  '5 viruses detected on your device. Immediate action required to prevent data loss!' },
+      { title: '🚨 IDENTITY THEFT WARNING',
+        body:  'Your bank credentials may be compromised. Click NOW to secure your account.' },
+      { title: '❗ WINDOWS DEFENDER EXPIRED',
+        body:  'Renew your protection immediately to avoid permanent damage to your system.' },
+      { title: '⚠️ TROJAN DETECTED',
+        body:  'Trojan.WIN32.WANNACRY found on your hard drive. Remove now to save your files.' },
+      { title: '🚨 SUSPICIOUS LOGIN ACTIVITY',
+        body:  'Unauthorized sign-in from a foreign IP detected. Verify your identity immediately.' },
+    ];
+
+    const SCAREWARE_ICON = 'data:image/svg+xml,' + encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">' +
+      '<polygon points="50,8 96,92 4,92" fill="#e74c3c" stroke="#7a0000" stroke-width="4"/>' +
+      '<text x="50" y="84" text-anchor="middle" font-size="62" font-weight="bold" fill="#fff">!</text>' +
+      '</svg>'
+    );
 
     function showStatus(msg, cls) {
       status.textContent = msg;
       status.className = 'show ' + (cls || '');
     }
+
+    // Apply Original / Demo mode: toggle body class and swap mode-aware text.
+    function applyMode(isDemo) {
+      document.body.classList.toggle('demo-mode', isDemo);
+      document.querySelectorAll('[data-text-original]').forEach((el) => {
+        el.textContent = isDemo ? el.dataset.textDemo : el.dataset.textOriginal;
+      });
+      modeName.textContent = isDemo ? 'Demo' : 'Original';
+      modeToggle.checked = isDemo;
+    }
+
+    // Restore mode from storage on load.
+    applyMode(localStorage.getItem('demoMode') === '1');
+    modeToggle.addEventListener('change', () => {
+      const on = modeToggle.checked;
+      localStorage.setItem('demoMode', on ? '1' : '0');
+      applyMode(on);
+    });
 
     // Register the service worker — required for clients.openWindow() path
     // which triggers NotifyWindowOpened → NOTIFICATION_INITIATED
@@ -143,10 +287,16 @@
       }
     });
 
-    // Step 2: Fire notification via the service worker registration.
+    // Step 2: Fire notification(s) via the service worker registration.
     // The SW's notificationclick handler calls clients.openWindow(url) which
     // is the code path that populates notification_navigation_events_ via
     // ServiceWorkerVersion::NotifyWindowOpened → NOTIFICATION_INITIATED.
+    //
+    // Original mode: a single calm notification (unchanged from the original
+    //   working flow — same title/body/icon/options).
+    // Demo mode: a burst of 5 staggered scareware notifications, each with a
+    //   unique tag so the system stacks them, all pointing at the same
+    //   redirect.html so clicking any one triggers the same chain.
     btnNotify.addEventListener('click', async () => {
       if (!swRegistration) {
         showStatus('Service worker not ready. Please reload the page.', 'denied');
@@ -154,15 +304,34 @@
       }
 
       const redirectUrl = new URL('redirect.html', window.location.href).href;
+      const isDemo = document.body.classList.contains('demo-mode');
 
-      await swRegistration.showNotification('SmartScreen Test', {
-        body: 'Click this notification to test the SmartScreen redirect chain.',
-        icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🔔</text></svg>',
-        requireInteraction: true,
-        data: { url: redirectUrl }
+      if (!isDemo) {
+        // === Original mode — DO NOT CHANGE: this is the verified flow. ===
+        await swRegistration.showNotification('SmartScreen Test', {
+          body: 'Click this notification to test the SmartScreen redirect chain.',
+          icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🔔</text></svg>',
+          requireInteraction: true,
+          data: { url: redirectUrl }
+        });
+        showStatus('Notification sent! Click it in your system tray — the service worker will call clients.openWindow() to trigger NOTIFICATION_INITIATED.', 'granted');
+        return;
+      }
+
+      // === Demo (scareware) mode — burst of 5 staggered notifications. ===
+      showStatus('🚨 Spamming 5 scareware-style notifications. Click any one to trigger the redirect chain.', 'granted');
+      SCAREWARE_NOTIFICATIONS.forEach((n, i) => {
+        setTimeout(() => {
+          swRegistration.showNotification(n.title, {
+            body: n.body,
+            icon: SCAREWARE_ICON,
+            tag: 'scareware-' + i,   // unique tag → stack rather than replace
+            renotify: true,
+            requireInteraction: true,
+            data: { url: redirectUrl }
+          });
+        }, i * 400);
       });
-
-      showStatus('Notification sent! Click it in your system tray — the service worker will call clients.openWindow() to trigger NOTIFICATION_INITIATED.', 'granted');
     });
   </script>
 </body>
