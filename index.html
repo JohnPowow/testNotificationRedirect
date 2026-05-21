@@ -303,7 +303,14 @@
         return;
       }
 
-      const redirectUrl = new URL('redirect.html', window.location.href).href;
+      // Open the SmartScreen-blocked URL directly from the SW so the blocked
+      // navigation itself is the notification-initiated one. Going via
+      // redirect.html sets source_url on the SmartScreen nav, which prevents
+      // safe_browsing_navigation_observer_manager from upgrading the chain
+      // entry to NOTIFICATION_INITIATED. The redirect.html variant is kept
+      // around (commented) for tests that need a multi-hop chain.
+      const targetUrl = 'https://nav.smartscreen.msft.net/phishingdemo.html';
+      // const targetUrl = new URL('redirect.html', window.location.href).href;
       const isDemo = document.body.classList.contains('demo-mode');
 
       if (!isDemo) {
@@ -312,7 +319,7 @@
           body: 'Click this notification to test the SmartScreen redirect chain.',
           icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🔔</text></svg>',
           requireInteraction: true,
-          data: { url: redirectUrl }
+          data: { url: targetUrl }
         });
         showStatus('Notification sent! Click it in your system tray — the service worker will call clients.openWindow() to trigger NOTIFICATION_INITIATED.', 'granted');
         return;
@@ -328,7 +335,7 @@
             tag: 'scareware-' + i,   // unique tag → stack rather than replace
             renotify: true,
             requireInteraction: true,
-            data: { url: redirectUrl }
+            data: { url: targetUrl }
           });
         }, i * 400);
       });
